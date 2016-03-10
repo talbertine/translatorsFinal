@@ -53,7 +53,10 @@ def generate_c(n, dec_vars):
 			stack = []
 			for i in n.targets:
 				stack.append(')')
-				retval += "pyobjAssign(&" + generate_c(i) + ", "
+				if isinstance(i, Subscript):
+					retval += "pyobjAssignSubscript(" + generate_c(i) + ", "
+				else:
+					retval += "pyobjAssign(" + generate_c(i) + ", "
 			retval += generate_c(n.value)
 			retval += "".join(stack) + ");\n"
 			return retval
@@ -146,7 +149,7 @@ def generate_c(n, dec_vars):
 			elif isinstance(n.ctx, Store):
 				if n.id not in dec_vars:
 					dec_vars.add(n.id)
-				return toVarName(n.id)
+				return "&" + toVarName(n.id)
 
 		#Operations
 		elif isinstance(n, UnaryOp):
@@ -187,6 +190,12 @@ def generate_c(n, dec_vars):
 				stk += [')']
 			retval += cmpops[-1] + "".join(stk)
 			return retval
+
+		elif isinstance(n, Subscript):
+			if isinstance(n.ctx, Load):
+
+			elif isinstance(n.ctx, Store):
+
 
 		#Operators
 		elif isinstance(n, UAdd):
