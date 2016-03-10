@@ -65,6 +65,27 @@ while a < 3:
         break
 for i in [1,2,3]:
     print i
+a = 3.0 if True else False
+b = 0.0
+a = 1.0
+c = []
+while a < 100:
+    a += 1
+    if a // 2 == a / 2:
+        pass
+    b = 2.0
+    prime = True
+    while b ** 2 <= a:
+        if a / b == a // b:
+            prime = False
+            break
+        b += 1
+    if prime:
+        c += [a]
+    else:
+        continue
+
+print c
 
 
 
