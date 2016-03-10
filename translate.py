@@ -192,6 +192,59 @@ def generate_c(n, dec_vars):
 		elif isinstance(n, UAdd):
 			return "pyobjUAdd"
 
+        elif isinstance(n, USub):
+            return "pyobjUSub"
+                
+        elif isinstance(n, Not):
+            return "pyobjNot"
+                
+        elif isinstance(n, And):
+            return "pyobjAnd"
+                
+        elif isinstance(n, Or):
+            return "pyobjOr"
+
+        elif isinstance(n, Add):
+            return "pyobjAdd"
+                
+        elif isinstance(n, Sub):
+            return "pyobjSub"
+                
+        elif isinstance(n, Mult):
+            return "pyobjMult"
+                
+        elif isinstance(n, Pow):
+            return "pyobjPow"
+                
+        elif isinstance(n, Is):
+            return "pyobjIs"
+                
+        elif isinstance(n, IsNot):
+            return "pyobjIsNot"
+                
+        elif isinstance(n, In):
+            return "pyobjIn"
+                
+        elif isinstance(n, NotIn):
+            return "pyobjNotIn"
+                
+        elif isinstance(n, Eq):
+            return "pyobjEq"
+                
+        elif isinstance(n, NotEq):
+            return "pyobjNotEq"
+                
+        elif isinstance(n, Lt):
+            return "pyobjLt"
+                
+        elif isinstance(n, LtE):
+            return "pyobjLtE"
+                
+        elif isinstance(n, Gt):
+            return "pyobjGt"
+                
+        elif isinstance(n, GtE):
+            return "pyobjGtE"
 
 
 
