@@ -87,6 +87,14 @@ while a < 100:
 
 print c
 
+a = b = c
+print a, b, c
+
+a = 10
+b = [0,1,2]
+c = 2
+b[c] = a
+
 
 
 
