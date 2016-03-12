@@ -235,7 +235,7 @@ struct pyobj *pyobjNot(struct pyobj *val){
         pyobj *retval = pyobjBool(valData);
     }
     
-    else if val->type == PY_BOOL{
+    else if (val->type == PY_BOOL){
         if (*(bool*)val->value == false) {
             valData = true;
         }
@@ -247,12 +247,12 @@ struct pyobj *pyobjNot(struct pyobj *val){
         pyobj *retval = pyobjBool(valData);
     }
     
-    else if val->type == PY_FLOAT{
+    else if (val->type == PY_FLOAT){
         valData = *(double*)val->value;
         retval = pyobjBool(valData);
     }
     
-    else if val->type == PY_LIST{
+    else if (val->type == PY_LIST){
         vector<struct pyobj **> data = *(vector<struct pyobj **> *) val->value;
         if (data.size == 0) {
             valData = true;
@@ -262,7 +262,7 @@ struct pyobj *pyobjNot(struct pyobj *val){
         }
     }
     
-    else if val->type == PY_DICT{
+    else if (val->type == PY_DICT){
         map<struct pyobj *, struct pyobj **> data = *(map<struct pyobj *, struct pyobj **> *) val->value;
         if (data.size == 0) {
             valData = true;
@@ -272,7 +272,7 @@ struct pyobj *pyobjNot(struct pyobj *val){
         }
     }
     
-    else if val->type == PY_NONE{
+    else if (val->type == PY_NONE){
         valData = true;
         retval = pyobjBool(valData);
     }
@@ -301,11 +301,12 @@ struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
         }
         
         else if (right->type == PY_BOOL){
+            int rightData;
             if (*(bool*)right->value == false){
-                int rightData = 0;
+                rightData = 0;
             }
             else {
-                int rightData = 1;
+                rightData = 1;
             }
             int resData = leftData * rightData;
             retval = pyobjInt(resData);
@@ -333,11 +334,13 @@ struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
         }
             
         else if (left->type == PY_BOOL){
+            int leftData;
+            
             if (*(bool*)left->value == false){
-                int leftData = 0;
+                leftData = 0;
             }
             else {
-                int leftData = 1;
+                leftData = 1;
             }
             int resData = leftData * rightData;
             retval = pyobjInt(resData);
@@ -355,25 +358,28 @@ struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
             retval = pyobjList(resData);
         }
 
-    else if ((left->type && right->type) == PY_FLOAT){
+    else if ((left->type == PY_FLOAT) && (right->type == PY_FLOAT)){
         double leftData = *(double*)left->value;
         double rightData = *(double*)right->value;
         double resData = leftData * rightData;
         retval = pyobjFloat(resData);
     }
         
-    else if ((left->type && right->type) == PY_BOOL){
+    else if ((left->type == PY_BOOL) && (right->type == PY_BOOL)){
+        int leftData;
+        int rightData;
+        
         if (*(bool*)left->value == false){
-            int leftData = 0;
+            leftData = 0;
         }
         else {
-            int leftData = 1;
+            leftData = 1;
         }
         if (*(bool*)right->value == false){
-            int rightData = 0;
+            rightData = 0;
         }
         else {
-            int rightData = 1;
+            rightData = 1;
         }
         int resData = leftData * rightData;
         retval = pyobjInt(resData);
