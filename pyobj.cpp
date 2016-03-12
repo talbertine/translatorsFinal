@@ -176,14 +176,10 @@ struct pyobj *pyobjSubscriptLoad(struct pyobj *ls, struct pyobj *idx);
 struct pyobj **pyobjSubscriptStore(struct pyobj *ls, struct pyobj *idx);
 
 //Operations
-struct pyobj *pyobjUAdd(struct pyobj *val);
-struct pyobj *pyobjUSub(struct pyobj *val);
-struct pyobj *pyobjNot(struct pyobj *val);
 struct pyobj *pyobjAnd(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjOr(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjAdd(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjSub(struct pyobj *left, struct pyobj *right);
-struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjDiv(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjFloorDiv(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjMod(struct pyobj *left, struct pyobj *right);
@@ -198,3 +194,250 @@ struct pyobj *pyobjLt(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjLtE(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjGt(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjGtE(struct pyobj *left, struct pyobj *right);
+
+
+//Hailey's Shit
+struct pyobj *pyobjUAdd(struct pyobj *val){
+    struct pyobj *retval;
+    double valData;
+    
+    if (val->type == PY_INT){
+        int valData = *(int*)val->value;
+        pyobj *retval = pyobjInt(valData);
+    }
+    
+    else if (val->type == PY_BOOL){
+        if (*(bool*)val->value == false){
+            valData = 0;
+        }
+        else {
+            valData = 1;
+        }
+        retval = pyobjInt(valData);
+    }
+    
+    else if (val->type == PY_FLOAT){
+        valData = *(double*)val->value;
+        pyobj *retval = pyobjFloat(valData);
+    }
+    
+    else {
+        cout << "Error: UAdd on Dict, List, or None not possible";
+        return 0;
+    }
+    
+    pyobjDecRef(val);
+    return retval;
+}
+
+struct pyobj *pyobjUSub(struct pyobj *val){
+    struct pyobj *retval;
+    double valData;
+    
+    if (val->type == PY_INT){
+        valData = *(int*)val->value;
+        retval = pyobjInt(-valData);
+    }
+    
+    else if (val->type == PY_BOOL){
+        if (*(bool*)val->value == false){
+            valData = 0;
+        }
+        else {
+            valData = -1;
+        }
+        retval = pyobjInt(valData);
+    }
+    
+    else if (val->type == PY_FLOAT){
+        valData = *(double*)val->value;
+        retval = pyobjFloat(-valData);
+    }
+    
+    else {
+        cout << "Error: USub on Dict, List, or None not possible";
+        return 0;
+    }
+    
+    pyobjDecRef(val);
+    return retval;
+}
+
+
+struct pyobj *pyobjNot(struct pyobj *val){
+    struct pyobj *retval;
+    bool valData;
+    
+    if (val->type == PY_INT){
+        if (*(int*)val->value == 0){
+            valData = true;
+        }
+        
+        else {
+           valData = false;
+        }
+        
+        pyobj *retval = pyobjBool(valData);
+    }
+    
+    else if val->type == PY_BOOL{
+        if (*(bool*)val->value == false) {
+            valData = true;
+        }
+        
+        else {
+            valData = false;
+        }
+        
+        pyobj *retval = pyobjBool(valData);
+    }
+    
+    else if val->type == PY_FLOAT{
+        valData = *(double*)val->value;
+        retval = pyobjBool(valData);
+    }
+    
+    else if val->type == PY_LIST{
+        vector<struct pyobj **> data = *(vector<struct pyobj **> *) val->value;
+        if (data.size == 0) {
+            valData = true;
+        }
+        else {
+            valData = false;
+        }
+    }
+    
+    else if val->type == PY_DICT{
+        map<struct pyobj *, struct pyobj **> data = *(map<struct pyobj *, struct pyobj **> *) val->value;
+        if (data.size == 0) {
+            valData = true;
+        }
+        else {
+            valData = false;
+        }
+    }
+    
+    else if val->type == PY_NONE{
+        valData = true;
+        retval = pyobjBool(valData);
+    }
+    
+    else {
+        cout << "Error: pyobjNot";
+        return 0;
+    }
+    
+    pyobjDecRef(val);
+    return retval;
+}
+
+
+struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
+    struct pyobj *retval;
+    
+    if (left->type == PY_INT){
+        
+        int leftData = *(int*)left->value;
+        
+        if (right->type == PY_INT){
+            int rightData = *(int*)right->value;
+            int resData = leftData * rightData;
+            retval = pyobjInt(resData);
+        }
+        
+        else if (right->type == PY_BOOL){
+            if (*(bool*)right->value == false){
+                int rightData = 0;
+            }
+            else {
+                int rightData = 1;
+            }
+            int resData = leftData * rightData;
+            retval = pyobjInt(resData);
+        }
+        
+        else if (right->type == PY_FLOAT){
+            double rightData = *(double*)right->value;
+            double resData = leftData * rightData;
+            retval = pyobjFloat(resData);
+        }
+        
+        else if (right->type == PY_LIST){
+            vector<struct pyobj **> data = *(vector<struct pyobj **> *) val->value;
+            double resData = leftData * data;
+            retval = pyobjList(resData);
+        }
+        
+    else if (right->type == PY_INT){
+        int rightData = *(int*)right->value;
+        
+        if (left->type == PY_INT){
+            int leftData = *(int*)left->value;
+            int resData = leftData * rightData;
+            retval = pyobjInt(resData);
+        }
+            
+        else if (left->type == PY_BOOL){
+            if (*(bool*)left->value == false){
+                int leftData = 0;
+            }
+            else {
+                int leftData = 1;
+            }
+            int resData = leftData * rightData;
+            retval = pyobjInt(resData);
+        }
+            
+        else if (left->type == PY_FLOAT){
+            double leftData = *(double*)left->value;
+            double resData = leftData * rightData;
+            retval = pyobjFloat(resData);
+        }
+            
+        else if (left->type == PY_LIST){
+            vector<struct pyobj **> data = *(vector<struct pyobj **> *) val->value;
+            vector<struct pyobj **> resData = leftData * data;
+            retval = pyobjList(resData);
+        }
+
+    else if ((left->type && right->type) == PY_FLOAT){
+        double leftData = *(double*)left->value;
+        double rightData = *(double*)right->value;
+        double resData = leftData * rightData;
+        retval = pyobjFloat(resData);
+    }
+        
+    else if ((left->type && right->type) == PY_BOOL){
+        if (*(bool*)left->value == false){
+            int leftData = 0;
+        }
+        else {
+            int leftData = 1;
+        }
+        if (*(bool*)right->value == false){
+            int rightData = 0;
+        }
+        else {
+            int rightData = 1;
+        }
+        int resData = leftData * rightData;
+        retval = pyobjInt(resData);
+    }
+        
+    else {
+        cout << "Error: pyobjMult trying to multiple incorrect types";
+        return 0;
+    }
+    
+	pyobjDecRef(left);
+	pyobjDecRef(right);
+	return retval;
+}
+
+
+
+
+
+
+
+
