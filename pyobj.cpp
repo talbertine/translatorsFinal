@@ -672,7 +672,18 @@ struct pyobj *pyobjIs(struct pyobj *left, struct pyobj *right){
     return retval;
 }
 
-struct pyobj *pyobjIsNot(struct pyobj *left, struct pyobj *right);
+struct pyobj *pyobjIsNot(struct pyobj *left, struct pyobj *right){
+    struct pyobj *retval;
+    if (left != right){
+        retval = pyobjBool(true);
+    } else {
+        retval = pyobjBool(false);
+    }
+    pyobjDecRef(left);
+    pyobjDecRef(right);
+    return retval;
+}
+
 struct pyobj *pyobjIn(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjNotIn(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjEq(struct pyobj *left, struct pyobj *right);
