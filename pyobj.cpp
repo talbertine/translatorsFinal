@@ -303,12 +303,12 @@ struct pyobj *pyobjSubscriptLoad(struct pyobj *ls, struct pyobj *idx){
             int idx = *(int *)idx->value;
             retval = *(*(*(vector<struct pyobj **> *)ls->value)[idx]);
         } else {
-            raise "Cannot index a list with anything other than an int."
+            throw "Cannot index a list with anything other than an int."
         }
     } else if(ls->type == PY_DICT){
         retval = *((*(map<struct pyobj *, struct pyobj **, cmpPyObj>)ls->value)[idx])
     } else {
-        raise "Tried to index something other than a collection."
+        throw "Tried to index something other than a collection."
     }
     pyobjIncRef(retval);
     pyobjDecRef(ls);
@@ -324,12 +324,12 @@ struct pyobj **pyobjSubscriptStore(struct pyobj *ls, struct pyobj *idx){
             int idx = *(int *)idx->value;
             retval = *(*(vector<struct pyobj **> *)ls->value)[idx];
         } else {
-            raise "Cannot index a list with anything other than an int."
+            throw "Cannot index a list with anything other than an int."
         }
     } else if(ls->type == PY_DICT){
         retval = (*(map<struct pyobj *, struct pyobj **, cmpPyObj>)ls->value)[]
     } else {
-        raise "Tried to index something other than a collection."
+        throw "Tried to index something other than a collection."
     }
     pyobjDecRef(ls);
     pyobjDecRef(idx);
@@ -337,8 +337,168 @@ struct pyobj **pyobjSubscriptStore(struct pyobj *ls, struct pyobj *idx){
 }
 
 //Operations
-struct pyobj *pyobjDiv(struct pyobj *left, struct pyobj *right);
-struct pyobj *pyobjFloorDiv(struct pyobj *left, struct pyobj *right);
+struct pyobj *pyobjDiv(struct pyobj *left, struct pyobj *right){
+    struct pyobj *retval;
+    switch (left->type){
+    case PY_INT:
+        int leftInt = *(int *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjInt(leftInt / rightInt);
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(leftInt / rightFloat);
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjInt(leftInt);
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation /"
+        }
+        break;
+    case PY_FLOAT:
+        double leftFloat = *(double *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjFloat(leftFloat / rightInt);
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(leftFloat / rightFloat);
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjFloat(leftFloat);
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation /"
+        }
+        break;
+    case PY_BOOL:
+        bool leftBool = *(bool *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            // booleans are promoted to ints when divided like this
+            retval = pyobjInt(leftBool / rightInt);
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(leftBool / rightFloat);
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjInt(leftBool / rightBool);
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation /"
+        }
+        break;
+    default:
+        throw "Invalid l-value for operation /"
+    }
+    pyobjDecRef(left);
+    pyobjDecRef(right);
+    return retval;
+}
+
+struct pyobj *pyobjFloorDiv(struct pyobj *left, struct pyobj *right){
+    struct pyobj *retval;
+    switch (left->type){
+    case PY_INT:
+        int leftInt = *(int *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjInt(leftInt / rightInt);
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(floor(leftInt / rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjInt(leftInt);
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    case PY_FLOAT:
+        double leftFloat = *(double *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjFloat(floor(leftFloat / rightInt));
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(floor(leftFloat / rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjFloat(floor(leftFloat));
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    case PY_BOOL:
+        bool leftBool = *(bool *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            // booleans are promoted to ints when divided like this
+            retval = pyobjInt(leftBool / rightInt);
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(floor(leftBool / rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjInt(leftBool / rightBool);
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    default:
+        throw "Invalid l-value for operation //"
+    }
+    pyobjDecRef(left);
+    pyobjDecRef(right);
+    return retval;
+}
+
 struct pyobj *pyobjMod(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjPow(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjIs(struct pyobj *left, struct pyobj *right);
