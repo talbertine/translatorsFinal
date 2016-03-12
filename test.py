@@ -52,6 +52,11 @@ print (-a)
 print a ** b
 print a ** c
 print None
+a = {1:1.0,2:2.0,3:3.0}
+print a[1]
+print a[2]
+print a[3]
+a
 a = 0
 while a < 3:
     if a == True:

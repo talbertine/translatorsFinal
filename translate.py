@@ -107,7 +107,7 @@ def generate_c(n, dec_vars):
 		elif isinstance(n, For):
 			iterVar = "i_" + str(getNewIdNum())
 			retval = "for ( int " + iterVar + " = 0; pyobjGetLen(pyobjGetItr(" + generate_c(n.iter, dec_vars) + ")) > " + iterVar + "; ++" + iterVar + "){\n"
-			retval += "pyobjDecRef(pyobjAssign(&" + generate_c(n.target, dec_vars) + ", pyobjIndex(pyobjGetItr(" + generate_c(n.iter, dec_vars) + "), pyobjInt(" + iterVar + "))));\n"
+			retval += "pyobjDecRef(pyobjAssign(" + generate_c(n.target, dec_vars) + ", pyobjIndex(pyobjGetItr(" + generate_c(n.iter, dec_vars) + "), pyobjInt(" + iterVar + "))));\n"
 			body = []
 			for i in n.body:
 				body.append(generate_c(i, dec_vars))

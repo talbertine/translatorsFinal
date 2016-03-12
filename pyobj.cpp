@@ -14,8 +14,6 @@ struct pyobj{
 	void *value;
 	long reference;
 };
-struct pyobj *trueConst;
-struct pyobj *falseConst;
 struct pyobj *noneConst;
 
 //Allows us to keep sane maps
@@ -40,18 +38,6 @@ struct cmpPyObj {
 
 //Call before anything happens
 void pyobjInit(){
-	trueConst = malloc(sizeof(struct pyobj));
-	trueConst->type = PY_BOOL;
-	trueConst->value = malloc(sizeof(bool));
-	*trueConst->value = true;
-	trueConst->reference = 2;
-
-	falseConst = malloc(sizeof(struct pyobj));
-	falseConst->type = PY_BOOL;
-	falseConst->value = malloc(sizeof(bool));
-	*falseConst->value = false;
-	falseConst->reference = 2;
-
 	noneConst = malloc(sizeof(struct pyobj));
 	noneConst->type = PY_NONE;
 	noneConst->reference = 2;
@@ -119,12 +105,20 @@ string pyobjToString(struct pyobj *value){
 		}
 		retval += "]"
 	case PY_DICT:
+        retval = "{"
 		map<struct pyobj *, struct pyobj **, cmpPyObj> data = *(map<struct pyobj *, struct pyobj **, cmpPyObj> *)obj->value;
-		vector<string> entries = vector<string>
+		vector<string> entries = vector<string>();
 		for (map<struct pyobj *, struct pyobj **, cmpPyObj>::iterator itr = data.start(); itr != data.end(); ++itr){
-			string entry = pyobjToString
-			entries.push_back()
+			string entry = pyobjToString(itr->first) + ": " + pyobjToString(*itr->second);
+			entries.push_back(entry);
 		}
+        for (int i = 0; i < entries.size(); i++){
+            retval += entries[i]
+            if (i != entries.size() - 1){
+                retval += ", "
+            }
+        }
+        retval += "}"
 	case PY_NONE:
 		retval = "None"
 	}
@@ -135,45 +129,212 @@ string pyobjToString(struct pyobj *value){
 //Corresponds to print
 void pyobjPrint(vector<struct pyobj *> values, bool newline){
 	string printVal = string("");
-
+    for (int i = 0; i < values.size(); i++){
+        printVal += pyobjToString(values[i]);
+        if (i != values.size() - 1){
+            printVal += " ";
+        }
+    }
+    if (newline){
+        cout << printVal << endl;
+    } else {
+        cout << printVal;
+    }
+    
 }
 
 //Assignment
-// Does not decrement reference count in order to facilitate chaining. Needs to be done manually at the end.
-struct pyobj *pyobjAssign(struct pyobj **var,  pyobj *val);
+// Does not decrement reference count in order to facilitate chaining. Needs to be done manually afterwards.
+struct pyobj *pyobjAssign(struct pyobj **var,  pyobj *val){
+    pyobjIncRef(val);
+    pyobjDecRef(*var);
+    (*var) = val;
+    return val;
+}
 
 //Increments reference count
-struct pyobj *pyobjIncRef(struct pyobj *val);
+struct pyobj *pyobjIncRef(struct pyobj *val){
+    val->reference++;
+    return val;
+}
 
 //Decrements reference count
 //Used internally so that reference counting is neat
-struct pyobj *pyobjDecRef(struct pyobj *val);
+struct pyobj *pyobjDecRef(struct pyobj *val){
+    val->reference--;
+    if (val->reference < 1){
+        //Nobody needs it anymore :'(
+        pyobjFree(val);
+        return NULL;
+    }
+    return val;
+}
 
-//Handy for for loops
-struct pyobj *pyobjIndex(struct pyobj *itr, struct pyobj *index);
-struct pyobj *pyobjGetItr(struct pyobj *obj);
-int pyobjGetLen(struct pyobj *obj);
+//Handy for for loops, but should not be used elsewhere.
+struct pyobj *pyobjIndex(struct pyobj *itr, struct pyobj *index){
+    //itr must be a list
+    vector<struct pyobj **> list = *(vector<struct pyobj **> *)itr->value;
+    //index must be an int
+    int i = *(int *)index->value;
+    struct pyobj *retval = *list[i];
+    pyobjIncRef(retval);
+    pyobjDecRef(itr);
+    pyobjDecRef(index);
+    return *list[i];
+}
+
+struct pyobj *pyobjGetItr(struct pyobj *obj){
+    struct pyobj *retval;
+    if (obj->type == PY_LIST){
+        retval = obj;
+    } else if (obj->type == PY_DICT){
+        vector<struct pyobj **>newList = vector<struct pyobj **>newList;
+        map<struct pyobj *, struct pyobj **, cmpPyObj> data = *(map<struct pyobj *, struct pyobj **, cmpPyObj>)obj->value;
+        for (map<struct pyobj *, struct pyobj **, cmpPyObj>::iterator itr = data.begin(); itr != data.end(); itr++){
+            struct pyobj **newEntry = new struct pyobj *;
+            *newEntry = itr->first;
+            newList.push_back(newEntry);
+        }
+        retval = pyobjList(newList.data(), newList.size());
+        pyobjDecRef(obj);
+    } else {
+        throw "You can't iterate over things that aren't collections."
+    }
+    return retval;
+}
+
+int pyobjGetLen(struct pyobj *obj){
+    //obj has to be a list
+    int retval = ((vector<struct pyobj **> *)obj->value)->size();
+    pyobjDecRef(obj);
+}
 
 //Literals
-struct pyobj *pyobjInt(int n);
-struct pyobj *pyobjBool(bool n);
-struct pyobj *pyobjFloat(double n);
-struct pyobj *pyobjList(struct pyobj vals[], int size);
-struct pyobj *pyobjDict(struct pyobj *keys[], struct pyobj *vals[], int size);
+struct pyobj *pyobjInt(int n){
+    struct pyobj *newObj = new struct pyobj;
+    newObj->type = PY_INT;
+    int *data = new int;
+    newObj->value = data;
+    *data = n;
+    newObj->reference = 1;
+    return newObj;
+}
+struct pyobj *pyobjBool(bool n){
+    struct pyobj *newObj;
+    if (n){
+        newObj = pyobjTrue();
+    } else {
+        newObj = pyobjFalse();
+    }
+    return newObj;
+}
+struct pyobj *pyobjFloat(double n){
+    struct pyobj *newObj = new struct pyobj;
+    newObj->type = PY_FLOAT;
+    double *newData = new double;
+    newObj->value = newData
+    *newData = n;
+    newObj->reference = 1;
+    return newObj;
+}
+struct pyobj *pyobjList(struct pyobj *vals[], int size){
+    struct pyobj *newObj = new struct pyobj;
+    newObj->type = PY_LIST;
+    vector<struct pyobj **> *newData = new vector<struct pyobj **>;
+    newObj->value = newData;
+    for (int i = 0; i < size; i++){
+        struct pyobj **newEntry = new struct pyobj *;
+        *newEntry = vals[i];
+        *newData->push_back(newEntry);
+    }
+    newObj->reference = 1;
+    return newObj;
+}
+struct pyobj *pyobjDict(struct pyobj *keys[], struct pyobj *vals[], int size){
+    struct pyobj *newObj = new struct pyobj;
+    newObj->type = PY_DICT;
+    map<struct pyobj *, struct pyobj **, cmpPyObj> *newData = new map<struct pyobj *, struct pyobj **, cmpPyObj>;
+    newObj->value = newData;
+    for (int i = 0; i < size; i++){
+        struct pyobj *newKey = keys[i];
+        struct pyobj **newVal = new struct pyobj *;
+        *newVal = vals[i];
+        (*newObj->value)[newKey] = newVal;
+    }
+    newObj->reference = 1;
+    return newObj;
+}
+struct pyobj *pyobjTrue(){
+    struct pyobj *newObj = new struct pyobj;
+    newObj->type = PY_BOOL;
+    bool *data = new bool;
+    newObj->value = data;
+    *data = true;
+    newObj->reference = 1;
+    return newObj;
+}
+struct pyobj *pyobjFalse(){
+    struct pyobj *newObj = new struct pyobj;
+    newObj->type = PY_BOOL;
+    bool *data = new bool;
+    newObj->value = data;
+    *data = true;
+    newObj->reference = 1;
+    return newObj;
+}
 
 //Global Constants
 //Not used by local names, but used when returning booleans from functions, for example
 //That is, only used internally
-struct pyobj *pyobjTrue();
-struct pyobj *pyobjFalse();
-struct pyobj *pyobjNone();
+struct pyobj *pyobjNone(){
+    pyobjIncRef(noneConst);
+    return noneConst;
+}
 
 //Loading names
-struct pyobj *pyobjLoadName(struct pyobj *var);
-struct pyobj *pyobjSubscriptLoad(struct pyobj *ls, struct pyobj *idx);
+struct pyobj *pyobjLoadName(struct pyobj *var){
+    pyobjIncRef(var);
+    return var;
+}
+struct pyobj *pyobjSubscriptLoad(struct pyobj *ls, struct pyobj *idx){
+    struct pyobj *retval;
+    if (ls->type == PY_LIST){
+        if (idx->type == PY_INT){
+            int idx = *(int *)idx->value;
+            retval = *(*(*(vector<struct pyobj **> *)ls->value)[idx]);
+        } else {
+            raise "Cannot index a list with anything other than an int."
+        }
+    } else if(ls->type == PY_DICT){
+        retval = *((*(map<struct pyobj *, struct pyobj **, cmpPyObj>)ls->value)[idx])
+    } else {
+        raise "Tried to index something other than a collection."
+    }
+    pyobjIncRef(retval);
+    pyobjDecRef(ls);
+    pyobjDecRef(idx);
+    return retval;
+}
 
 //Storing stuff
-struct pyobj **pyobjSubscriptStore(struct pyobj *ls, struct pyobj *idx);
+struct pyobj **pyobjSubscriptStore(struct pyobj *ls, struct pyobj *idx){
+    struct pyobj **retval;
+    if (ls->type == PY_LIST){
+        if (idx->type == PY_INT){
+            int idx = *(int *)idx->value;
+            retval = *(*(vector<struct pyobj **> *)ls->value)[idx];
+        } else {
+            raise "Cannot index a list with anything other than an int."
+        }
+    } else if(ls->type == PY_DICT){
+        retval = (*(map<struct pyobj *, struct pyobj **, cmpPyObj>)ls->value)[]
+    } else {
+        raise "Tried to index something other than a collection."
+    }
+    pyobjDecRef(ls);
+    pyobjDecRef(idx);
+    return retval;
+}
 
 //Operations
 struct pyobj *pyobjAnd(struct pyobj *left, struct pyobj *right);
