@@ -1,8 +1,13 @@
 #include <vector>
 #include <map>
+#include <string>
+#include <iostream>
 
 using std::map;
 using std::vector;
+using std::cout;
+using std::endl;
+using std::sstream;
 
 /*
  * In general, reference count is decreased when an object is "consumed". When you read from a name, 

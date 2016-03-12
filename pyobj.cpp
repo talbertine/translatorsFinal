@@ -37,25 +37,61 @@ void pyobjInit(){
 	noneConst->reference = 2;
 }
 
-void pyobjFree(struct pyobj *){
-	switch (pyobj->type){
+void pyobjFree(struct pyobj *obj){
+	switch (obj->type){
 	case PY_INT:
-		
 	case PY_FLOAT:
-
 	case PY_BOOL:
-
+		free(*obj->value)
+		free(obj);
+		break;
 	case PY_LIST:
-
+		vector<struct pyobj **> data = *(vector<struct pyobj**> *)obj->value;
+		for (int i = 0; i < data.size(); i++){
+			pyobjDecRef(*data[i]);
+			free(data[i]);
+		}
+		delete data;
+		free(obj);
+		break;
 	case PY_DICT:
+		map<struct pyobj *, struct pyobj **> data = *(map<struct pyobj *, struct pyobj **> *)obj->value;
+		for (map<struct pyobj *, struct pyobj **>::iterator itr = data.begin(); itr != data.end(); ++itr){
+			pyobjDecRef(itr->first);
+			pyobjDecRef(*itr->second);
+			free(itr->second);
+		}
+		delete data;
+		free(obj);
+		break
+	case PY_NONE:
+		free(obj);
+		break;
+	default:
+		throw "Unexpected type in pyobjFree";
+	}
+}
 
+string pyobjToString(struct pyobj *value){
+	string retval = ""
+	stringstream
+	switch (value->type){
+	case PY_INT:
+		retval = 
+	case PY_FLOAT:
+	case PY_BOOL:
+	case PY_LIST:
+	case PY_DICT:
 	case PY_NONE:
 	}
 }
 
 //Statements:
 //Corresponds to print
-void pyobjPrint(vector<struct pyobj *> values, bool newline);
+void pyobjPrint(vector<struct pyobj *> values, bool newline){
+	string printVal = string("");
+
+}
 
 //Assignment
 // Does not decrement reference count in order to facilitate chaining. Needs to be done manually at the end.
