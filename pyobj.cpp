@@ -18,6 +18,26 @@ struct pyobj *trueConst;
 struct pyobj *falseConst;
 struct pyobj *noneConst;
 
+//Allows us to keep sane maps
+struct cmpPyObj {
+    bool operator()(const struct pyobj*& a, const struct pyobj*& b) const {
+        if (a->type != b->type)
+        	return a->type < b->type;
+        switch (a->type){
+        case PY_INT:
+        	return *(int *)a->value < *(int *)b->value;
+        case PY_FLOAT:
+        	return *(double *)a->value < *(double *)b->value;
+        case PY_BOOL:
+        	return *(bool *)a->value < *(bool *)b->value;
+        case PY_NONE:
+        	return false;
+        default:
+        	throw "Cannot index by a list or dict. That's just dumb."
+        }
+    }
+};
+
 //Call before anything happens
 void pyobjInit(){
 	trueConst = malloc(sizeof(struct pyobj));
@@ -55,8 +75,8 @@ void pyobjFree(struct pyobj *obj){
 		free(obj);
 		break;
 	case PY_DICT:
-		map<struct pyobj *, struct pyobj **> data = *(map<struct pyobj *, struct pyobj **> *)obj->value;
-		for (map<struct pyobj *, struct pyobj **>::iterator itr = data.begin(); itr != data.end(); ++itr){
+		map<struct pyobj *, struct pyobj **, cmpPyObj> data = *(map<struct pyobj *, struct pyobj **, cmpPyObj> *)obj->value;
+		for (map<struct pyobj *, struct pyobj **, cmpPyObj>::iterator itr = data.begin(); itr != data.end(); ++itr){
 			pyobjDecRef(itr->first);
 			pyobjDecRef(*itr->second);
 			free(itr->second);
@@ -74,16 +94,41 @@ void pyobjFree(struct pyobj *obj){
 
 string pyobjToString(struct pyobj *value){
 	string retval = ""
-	stringstream
+	stringstream ss;
 	switch (value->type){
 	case PY_INT:
-		retval = 
+		ss << *(int *) value->value;
+		ss >> retval;
 	case PY_FLOAT:
+		ss << *(double *)value->value;
+		ss >> retval;
 	case PY_BOOL:
+		if (*(bool *) value->value){
+			retval = "True";
+		} else {
+			retval = "False";
+		}
 	case PY_LIST:
+		retval = "["
+		vector<struct pyobj **> data = *(vector<struct pyobj **> *) value->value;
+		for (int i = 0; i < data.size(); ++i){
+			retval += pyobjToString(*data[i]);
+			if (data.size() - 1 != i){
+				retval += ", "
+			}
+		}
+		retval += "]"
 	case PY_DICT:
+		map<struct pyobj *, struct pyobj **, cmpPyObj> data = *(map<struct pyobj *, struct pyobj **, cmpPyObj> *)obj->value;
+		vector<string> entries = vector<string>
+		for (map<struct pyobj *, struct pyobj **, cmpPyObj>::iterator itr = data.start(); itr != data.end(); ++itr){
+			string entry = pyobjToString
+			entries.push_back()
+		}
 	case PY_NONE:
+		retval = "None"
 	}
+	return retval;
 }
 
 //Statements:
