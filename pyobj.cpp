@@ -1,5 +1,6 @@
 #include "pyobj.h"
 #include <cstdlib>
+#include <cmath>
 
 #define PY_INT 0
 #define PY_FLOAT 1
@@ -499,9 +500,178 @@ struct pyobj *pyobjFloorDiv(struct pyobj *left, struct pyobj *right){
     return retval;
 }
 
-struct pyobj *pyobjMod(struct pyobj *left, struct pyobj *right);
-struct pyobj *pyobjPow(struct pyobj *left, struct pyobj *right);
-struct pyobj *pyobjIs(struct pyobj *left, struct pyobj *right);
+struct pyobj *pyobjMod(struct pyobj *left, struct pyobj *right){
+    struct pyobj *retval;
+    switch (left->type){
+    case PY_INT:
+        int leftInt = *(int *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjInt(leftInt % rightInt);
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(fmod(leftInt, rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjInt(leftInt % rightBool);
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    case PY_FLOAT:
+        double leftFloat = *(double *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjFloat(fmod(leftFloat, rightInt));
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(fmod(leftFloat, rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjFloat(fmod(leftFloat, rightBool));
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    case PY_BOOL:
+        bool leftBool = *(bool *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            // booleans are promoted to ints when divided like this
+            retval = pyobjInt(leftBool % rightInt);
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(fmod(leftBool, rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjInt(leftBool % rightBool);
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    default:
+        throw "Invalid l-value for operation //"
+    }
+    pyobjDecRef(left);
+    pyobjDecRef(right);
+    return retval;
+}
+
+struct pyobj *pyobjPow(struct pyobj *left, struct pyobj *right){
+    struct pyobj *retval;
+    switch (left->type){
+    case PY_INT:
+        int leftInt = *(int *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjInt(pow(leftInt, rightInt));
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(pow(leftInt, rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            retval = pyobjInt(pow(leftInt, rightBool);
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    case PY_FLOAT:
+        double leftFloat = *(double *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjFloat(pow(leftFloat, rightInt));
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(pow(leftFloat, rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjFloat(fmod(leftFloat, rightBool));
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    case PY_BOOL:
+        bool leftBool = *(bool *)left->value;
+        switch (right->type){
+        case PY_INT:
+            int rightInt = *(int *)right->value;
+            // booleans are promoted to ints when divided like this
+            retval = pyobjInt(pow(leftBool, rightInt));
+            break;
+        case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjFloat(pow(leftBool, rightFloat));
+            break;
+        case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            if (rightBool){
+                retval = pyobjInt(pow(leftBool, rightBool));
+            } else {
+                throw "Division by zero"
+            }
+            break;
+        default:
+            throw "Invalid r-value for operation //"
+        }
+        break;
+    default:
+        throw "Invalid l-value for operation //"
+    }
+    pyobjDecRef(left);
+    pyobjDecRef(right);
+    return retval;
+}
+
+//Won't behave like python's is necessarily, because python's is operator is weird.
+//By that I mean, it's undefined which objects are reused.
+struct pyobj *pyobjIs(struct pyobj *left, struct pyobj *right){
+    struct pyobj *retval;
+    if (left == right){
+        retval = pyobjBool(true);
+    } else {
+        retval = pyobjBool(false);
+    }
+    pyobjDecRef(left);
+    pyobjDecRef(right);
+    return retval;
+}
+
 struct pyobj *pyobjIsNot(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjIn(struct pyobj *left, struct pyobj *right);
 struct pyobj *pyobjNotIn(struct pyobj *left, struct pyobj *right);
