@@ -1,6 +1,7 @@
 #include "pyobj.h"
 #include <cstdlib>
 #include <cmath>
+#include <algorithm>
 
 #define PY_INT 0
 #define PY_FLOAT 1
@@ -856,13 +857,258 @@ struct pyobj *pyobjEq(struct pyobj *left, struct pyobj *right){
 struct pyobj *pyobjNotEq(struct pyobj *left, struct pyobj *right){
     return pyobjNot(pyobjEq(left, right));
 }
-struct pyobj *pyobjLt(struct pyobj *left, struct pyobj *right);
-struct pyobj *pyobjLtE(struct pyobj *left, struct pyobj *right);
-struct pyobj *pyobjGt(struct pyobj *left, struct pyobj *right);
-struct pyobj *pyobjGtE(struct pyobj *left, struct pyobj *right);
+
+//A helper function that gets the list of keys
+vector<struct pyobj *> getKeys(map<struct pyobj *, struct pyobj **, cmpPyObj> src){
+    vector<struct pyobj *> keys = vector<struct pyobj *>();
+    for (map<struct pyobj *, struct pyobj **, cmpPyObj>::iterator itr = src.begin(); itr != src.end(); itr++){
+        keys.push_back(itr->first);
+    }
+    return keys;
+}
+
+struct pyobj *pyobjLt(struct pyobj *left, struct pyobj *right){
+    struct pyobj *retval;
+    switch (left->type){
+        case PY_INT:
+        int leftInt = *(int *)left->value;
+        switch (right->type){
+            case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjBool(leftInt < rightInt);
+            break;
+            case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjBool(leftInt < rightFloat);
+            break;
+            case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            retval = pyobjBool(leftInt < rightBool);
+            break;
+            case PY_LIST: //An int can never be equal to any of these
+            retval = pyobjBool(true);
+            break;
+            case PY_DICT:
+            retval = pyobjBool(false);
+            break;
+            case PY_NONE:
+            retval = pyobjBool(true);
+        }
+        break;
+        case PY_FLOAT:
+        double leftFloat = *(double *)left->value;
+        switch (right->type){
+            case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjBool(leftFloat < rightInt);
+            break;
+            case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjBool(leftFloat < rightFloat);
+            break;
+            case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            retval = pyobjBool(leftFloat < rightBool);
+            break;
+            case PY_LIST: //A float can never be equal to any of these
+            retval = pyobjBool(true);
+            break;
+            case PY_DICT:
+            retval = pyobjBool(false);
+            break;
+            case PY_NONE:
+            retval = pyobjBool(true);
+        }
+        break;
+        case PY_BOOL:
+        bool leftBool = *(bool *)left->value;
+        switch (right->type){
+            case PY_INT:
+            int rightInt = *(int *)right->value;
+            retval = pyobjBool(leftBool < rightInt);
+            break;
+            case PY_FLOAT:
+            double rightFloat = *(double *)right->value;
+            retval = pyobjBool(leftBool < rightFloat);
+            break;
+            case PY_BOOL:
+            bool rightBool = *(bool *)right->value;
+            retval = pyobjBool(leftBool < rightBool);
+            break;
+            case PY_LIST: //A bool can never be equal to any of these
+            retval = pyobjBool(true);
+            break;
+            case PY_DICT:
+            retval = pyobjBool(true);
+            break;
+            case PY_NONE:
+            retval = pyobjBool(true);
+        }
+        break;
+        case PY_LIST:
+        vector<struct pyobj **>leftList = *(vector<struct pyobj **> *)left->value;
+        switch (right->type){
+            case PY_LIST: 
+            vector<struct pyobj **>rightList = *(vector<struct pyobj **> *)right->value;
+            retval = NULL
+            int size = leftList.size();
+            struct pyobj *temp1;
+            struct pyobj *temp2;
+            if (rightList.size() < size){
+                size = rightList.size();
+            }
+            for (int i = 0; i < size; i++){
+                struct pyobj *leftDatum = *leftList[i];
+                struct pyobj *rightDatum = *rightList[i];
+                pyobjIncRef(leftDatum);
+                pyobjIncRef(rightDatum);
+                pyobjIncRef(leftDatum);
+                pyobjIncRef(rightDatum);
+                temp1 = pyobjLt(leftDatum, rightDatum);
+                temp2 = pyobjGt(leftDatum, rightDatum);
+                bool lt = *(bool *)temp1->value;
+                bool gt = *(bool *)temp2->value;
+                pyobjDecRef(temp1);
+                pyobjDecRef(temp2);
+                if (lt){
+                    retval = pyobjBool(true);
+                    break;
+                } else if (gt){
+                    retval = pyobjBool(false);
+                    break;
+                }
+            }
+            if (retval == NULL){
+                //We haven't found anything yet.
+                //They're equal in terms of content so far, but not necessarily length
+                if (leftList.size() < rightList.size()){
+                    retval = pyobjBool(true);
+                } else {
+                    retval = pyobjBool(false);
+                }
+            }
+            break;
+            case PY_INT: //A list can never be equal to anything but a list
+            retval = pyobjBool(false);
+            break;
+            case PY_FLOAT:
+            retval = pyobjBool(false);
+            break;
+            case PY_BOOL:
+            retval = pyobjBool(false);
+            break;
+            case PY_DICT:
+            retval = pyobjBool(false);
+            break;
+            case PY_NONE:
+            retval = pyobjBool(true);
+        }
+        break;
+        case PY_DICT:
+        map<struct pyobj *, struct pyobj **, cmpPyObj>leftMap = *(map<struct pyobj *, struct pyobj **, cmpPyObj> *)left->value;
+        switch (right->type){
+            case PY_DICT: 
+            map<struct pyobj *, struct pyobj **, cmpPyObj>rightMap = *(map<struct pyobj *, struct pyobj **, cmpPyObj> *)right->value;
+            retval = NULL;
+            //First compare length
+            if (leftMap.size() < rightMap.size()){
+                retval = pyobjBool(true);
+                break;
+            } else if (leftMap.size() > rightMap.size()){
+                retval = pyobjBool(false);
+                break;
+            }
+            vector<struct pyobj *> leftKeys = getKeys(leftMap);
+            vector<struct pyobj *> rightKeys = getKeys(rightMap);
+            std::sort(leftKeys.begin(), leftKeys.end(), cmpPyObj);
+            std::sort(rightKeys.begin(), rightKeys.end(), cmpPyObj);
+            for (int i = 0; i < leftKeys.size(); i++){ //Now compare keys
+                struct pyobj *leftDatum = leftKeys[i];
+                struct pyobj *rightDatum = rightKeys[i];
+                pyobjIncRef(leftDatum);
+                pyobjIncRef(rightDatum);
+                pyobjIncRef(leftDatum);
+                pyobjIncRef(rightDatum);
+                temp1 = pyobjLt(leftDatum, rightDatum);
+                temp2 = pyobjGt(leftDatum, rightDatum);
+                bool lt = *(bool *)temp1->value;
+                bool gt = *(bool *)temp2->value;
+                pyobjDecRef(temp1);
+                pyobjDecRef(temp2);
+                if (lt){
+                    retval = pyobjBool(true);
+                    break;
+                } else if (gt){
+                    retval = pyobjBool(false);
+                    break;
+                }
+            }
+            if (retval != NULL){
+                break;
+            }
+            for (int i = 0; i < leftKeys.size(); i++){ //Now compare values
+                struct pyobj *leftDatum = leftMap[leftKeys[i]];
+                struct pyobj *rightDatum = rightMap[rightKeys[i]];
+                pyobjIncRef(leftDatum);
+                pyobjIncRef(rightDatum);
+                pyobjIncRef(leftDatum);
+                pyobjIncRef(rightDatum);
+                temp1 = pyobjLt(leftDatum, rightDatum);
+                temp2 = pyobjGt(leftDatum, rightDatum);
+                bool lt = *(bool *)temp1->value;
+                bool gt = *(bool *)temp2->value;
+                pyobjDecRef(temp1);
+                pyobjDecRef(temp2);
+                if (lt){
+                    retval = pyobjBool(true);
+                    break;
+                } else if (gt){
+                    retval = pyobjBool(false);
+                    break;
+                }
+            }
+            if (retval == NULL){
+                retval = pyobjBool(false);
+            }
+            break;
+            case PY_INT: //A dict can never be equal to anything but a dict
+            retval = pyobjBool(true);
+            break;
+            case PY_FLOAT:
+            retval = pyobjBool(true);
+            break;
+            case PY_BOOL:
+            retval = pyobjBool(false);
+            break;
+            case PY_LIST:
+            retval = pyobjBool(true);
+            break;
+            case PY_NONE:
+            retval = pyobjBool(true);
+        }
+        break;
+        case PY_NONE:
+        retval = pyobjBool(false);
+    }
+    pyobjDecRef(left);
+    pyobjDecRef(right);
+    return retval;
+}
+
+struct pyobj *pyobjLtE(struct pyobj *left, struct pyobj *right){
+    return pyobjNot(pyobjGt(left, right));
+}
+
+struct pyobj *pyobjGt(struct pyobj *left, struct pyobj *right){
+    //TODO write this one!
+}
+
+struct pyobj *pyobjGtE(struct pyobj *left, struct pyobj *right){
+    return pyobjNot(pyobjLt(left, right));
+}
 
 
-//Hailey's Shit
+//Hailey's Wonderful Contribution
 struct pyobj *pyobjUAdd(struct pyobj *val){
     struct pyobj *retval;
     double valData;

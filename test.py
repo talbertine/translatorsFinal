@@ -99,6 +99,14 @@ a = 10
 b = [0,1,2]
 c = 2
 b[c] = a
+print a
+print b
+print c
+
+d= {1:True, 10.0:False, 20:[1,1,2,3,5,8,13]}
+print d[i]
+print d[10.0]
+print d[20]
 
 
 
