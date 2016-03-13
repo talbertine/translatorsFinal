@@ -1,0 +1,25 @@
+/*******************************************************************
+ * Class: CS480 Translators Final Project
+ * Assignment: Topic 1 - Translating Larger Subsets of Python
+ * Authors: Thomas Albertine, Hailey Palmiter, and Rylee Glassman
+********************************************************************/
+
+1. List the features that your team have successfully implemented.
+
+	Our team has successfully implemented multiple statements that include:
+	print, while, assign, if, and for loops. We have also implemented int,
+	bool, float, list, and dictionary types, along with several different 
+	operations that include the following:
+
+	UnaryOp: Not, UAdd, and USub
+	BoolOp: And and Or
+	BinOp: Add, Sub, Mult, Div, Mod, Pow, and FloorDiv
+	Compare: Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn
+
+2. State each author’s contributions.
+
+	
+3. If your team have discussed with another team, list that team’s members.
+
+	Our team did not discuss with any other teams. 
+4. Any suggestions?
