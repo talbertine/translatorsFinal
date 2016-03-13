@@ -16,10 +16,15 @@
 	BinOp: Add, Sub, Mult, Div, Mod, Pow, and FloorDiv
 	Compare: Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn
 
-2. State each author’s contributions.
+2. State each author’s contributions.
+	Thomas wrote a grammar for the features that we support.
+	All three of us did pair programming while we wrote the Python code.
+	Hailey and Thomas wrote the first C code.
+	Thomas and Riley pair programmed during the last of the C code, an the debugging.
 
 	
-3. If your team have discussed with another team, list that team’s members.
+3. If your team have discussed with another team, list that team’s members.
 
 	Our team did not discuss with any other teams. 
-4. Any suggestions?
+4. Any suggestions?
+	A more clear definition of what features we need.
