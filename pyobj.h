@@ -38,6 +38,7 @@ struct pyobj *pyobjIncRef(struct pyobj *val);
 struct pyobj *pyobjDecRef(struct pyobj *val);
 
 //Handy for for loops
+bool pyobjToBool(struct pyobj *val); 
 struct pyobj *pyobjIndex(struct pyobj *itr, struct pyobj *index);
 struct pyobj *pyobjGetItr(struct pyobj *obj);
 int pyobjGetLen(struct pyobj *obj);
@@ -46,7 +47,7 @@ int pyobjGetLen(struct pyobj *obj);
 struct pyobj *pyobjInt(int n);
 struct pyobj *pyobjBool(bool n);
 struct pyobj *pyobjFloat(double n);
-struct pyobj *pyobjList(struct pyobj vals[], int size);
+struct pyobj *pyobjList(struct pyobj *vals[], int size);
 struct pyobj *pyobjDict(struct pyobj *keys[], struct pyobj *vals[], int size);
 
 //Global Constants

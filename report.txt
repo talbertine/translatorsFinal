@@ -20,7 +20,7 @@
 	Thomas wrote a grammar for the features that we support.
 	All three of us did pair programming while we wrote the Python code.
 	Hailey and Thomas wrote the first C code.
-	Thomas and Riley pair programmed during the last of the C code, an the debugging.
+	We pair programmed during the last of the C code, an the debugging.
 
 	
 3. If your team have discussed with another team, list that team’s members.
