@@ -1,6 +1,18 @@
+flags = -std=c++0x
+CC = clang++
 
+default: project
 
-project: skeleton.c hashtable_itr.c hashtable_itr.h hashtable.h hashtable_private.h hw6_compiler.py
-	cat test.py | python hw6_compiler.py > main.c
-	gcc main.c skeleton.c hashtable_itr.c hashtable_itr.h hashtable.h hashtable_private.h -o prog
+main.cpp: test.py
+	cat test.py | python translate.py > main.cpp
 
+pyobj.o: pyobj.cpp pyobj.h
+	$(CC)  -c pyobj.cpp
+
+project: main.cpp pyobj.h pyobj.o
+	$(CC)  main.cpp pyobj.o -o prog
+
+clean:
+	-@rm -f main.cpp
+	-@rm -f pyobj.o
+	-@rm -f project

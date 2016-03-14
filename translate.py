@@ -42,17 +42,17 @@ def generate_c(n, dec_vars):
 													"return 0;",
 													"}"])
 		elif isinstance(n, Print): #Print Statements
-			retval = "pyobjPrint(vector<pyobj *>(["
+			retval = "pyobjPrint("
+			if n.nl:
+				retval += 'true, '
+			else:
+				retval += 'false, '
 			values = []
 			for i in n.values:
 				values.append(generate_c(i, dec_vars))
+			retval += str(len(values)) + ", "
 			values = ", ".join(values)
 			retval += values
-			retval += "], "
-			if n.nl:
-				retval += 'true'
-			else:
-				retval += 'false'
 			retval += ');\n'
 			return retval
 
@@ -137,23 +137,24 @@ def generate_c(n, dec_vars):
 				raise SyntaxError("Complex type not supported")
 
 		elif isinstance(n, List):
-			retval = "pyobjList(["
+			retval = "pyobjList(" + str(len(n.elts))
+			if len(n.elts) != 0:
+				retval += ', '
 			listElms = []
 			for i in n.elts:
 				listElms.append(generate_c(i, dec_vars))
-			retval += ", ".join(listElms)
-			retval += '], ' + str(len(n.elts)) + ")"
+			retval += ", ".join(listElms) + ")"
 			return retval
 
 		elif isinstance(n, Dict):
-			retval = "pyobjDict(["
-			keys = []
+			retval = "pyobjDict(" + str(len(n.keys))
+			if len(n.keys) != 0:
+				retval += ', '
 			vals = []
 			for i in range(len(n.keys)):
-				keys.append(generate_c(n.keys[i], dec_vars))
-				vals.append(generate_c(n.vals[i], dec_vars))
-			retval += ", ".join(keys) + "], ["
-			retval += ", ".join(vals) + "], " + str(len(i)) + ")"
+				vals.append(generate_c(n.keys[i], dec_vars))
+				vals.append(generate_c(n.values[i], dec_vars))
+			retval += ", ".join(vals) + ")"
 			return retval
 		
 		elif isinstance(n, Name):
@@ -218,7 +219,7 @@ def generate_c(n, dec_vars):
 				raise SyntaxError("We don't support del")
 
 		elif isinstance(n, IfExp):
-			return "pyobjIfExp(pyobjToBool(" + generate_c(n.test, dec_vars) + "), " + generate_c(n.body, dec_vars) + ", " + generate_c(n.orelse, dec_vars) + ")"
+			return "pyobjIfExp(" + generate_c(n.test, dec_vars) + ", " + generate_c(n.body, dec_vars) + ", " + generate_c(n.orelse, dec_vars) + ")"
 
 		#Operators
 		elif isinstance(n, UAdd):
