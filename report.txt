@@ -15,6 +15,7 @@
 	BoolOp: And and Or
 	BinOp: Add, Sub, Mult, Div, Mod, Pow, and FloorDiv
 	Compare: Eq, NotEq, Lt, LtE, Gt, GtE, Is, IsNot, In, NotIn
+	Additional collection operations: list and dict subscripts for both storage and retrieval.
 
 2. State each author’s contributions.
 
@@ -30,4 +31,4 @@
 	
 4. Any suggestions?
 
-	A more clear definition of what features we need.
+	A more clear definition of what features we need. Comments in the sample code would be helpful as well.

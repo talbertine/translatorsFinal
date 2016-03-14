@@ -446,7 +446,7 @@ struct pyobj *pyobjFalse(){
     newObj->type = PY_BOOL;
     bool *data = new bool;
     newObj->value = data;
-    *data = true;
+    *data = false;
     newObj->reference = 1;
     return newObj;
 }
@@ -878,7 +878,7 @@ struct pyobj *pyobjIs(struct pyobj *left, struct pyobj *right){
 }
 
 struct pyobj *pyobjIsNot(struct pyobj *left, struct pyobj *right){
-    return pyobjNot(pyobjIn(left, right));
+    return pyobjNot(pyobjIs(left, right));
 }
 
 struct pyobj *pyobjIn(struct pyobj *left, struct pyobj *right){
@@ -1681,50 +1681,16 @@ struct pyobj *pyobjAnd(struct pyobj *left, struct pyobj *right){
     
     pyobjIncRef(left);
     bool leftVal = pyobjToBool(left);
-    if (leftVal){
-        copy = right;
+    if (pyobjToBool(left)){
+        pyobjDecRef(left);
+        return right;
     } else {
-        copy = left;
+        pyobjDecRef(right);
+        return left;
     }
-    switch (copy->type){
-        case PY_INT:
-        retval = pyobjInt(*(int *)copy->value);
-        break;
-        case PY_FLOAT:
-        retval = pyobjInt(*(double *)copy->value);
-        break;
-        case PY_BOOL:
-        retval = pyobjInt(*(bool *)copy->value);
-        break;
-        case PY_DICT:
-        valMap = * (map<struct pyobj *, struct pyobj **, cmpPyObj> *) copy->value;
-        keys = (struct pyobj **) malloc(sizeof(pyobj *) * valMap.size());
-        values = (struct pyobj **) malloc(sizeof(pyobj *) * valMap.size());
-        i = 0;
-        for (map<struct pyobj *, struct pyobj **, cmpPyObj>::iterator itr = valMap.begin(); itr != valMap.end(); itr++){
-            keys[i] = itr->first;
-            values[i] = *itr->second;
-            i++;
-        }
-        retval = pyobjDict(keys, values, valMap.size());
-        break;
-        case PY_LIST:
-        valList = * (vector<struct pyobj **> *) copy->value;
-        vals = (struct pyobj **)malloc(sizeof(struct pyobj *) * valList.size());
-        for(int i = 0; i < valList.size(); i++){
-            vals[i] = *valList[i];
-        }
-        retval = pyobjList(vals, valList.size());
-        break;
-        case PY_NONE:
-        retval = pyobjNone();
-    }
-    
-    pyobjDecRef(left);
-    pyobjDecRef(right);
-    return retval;
 }
 
+//Returns the reference 
 struct pyobj *pyobjOr(struct pyobj *left, struct pyobj *right){
     struct pyobj *retval;
     struct pyobj *copy;
@@ -1738,50 +1704,12 @@ struct pyobj *pyobjOr(struct pyobj *left, struct pyobj *right){
 
     pyobjIncRef(left);
     if (pyobjToBool(left)){
-        copy = left;
+        pyobjDecRef(right);
+        return left;
     } else {
-        copy = right;
+        pyobjDecRef(left);
+        return right;
     }
-    switch (copy->type){
-        case PY_INT:
-        retval = pyobjInt(*(int *)copy->value);
-        break;
-        case PY_FLOAT:
-        retval = pyobjInt(*(double *)copy->value);
-        break;
-        case PY_BOOL:
-        retval = pyobjInt(*(bool *)copy->value);
-        break;
-        case PY_DICT:
-        valMap = * (map<struct pyobj *, struct pyobj **, cmpPyObj> *) copy->value;
-        keys = (struct pyobj **) malloc(sizeof(pyobj *) * valMap.size());
-        values = (struct pyobj **) malloc(sizeof(pyobj *) * valMap.size());
-        i = 0;
-        for (map<struct pyobj *, struct pyobj **, cmpPyObj>::iterator itr = valMap.begin(); itr != valMap.end(); itr++){
-            keys[i] = itr->first;
-            values[i] = *itr->second;
-            i++;
-        }
-        free(values);
-        free(keys);
-        retval = pyobjDict(keys, values, valMap.size());
-        break;
-        case PY_LIST:
-        valList = * (vector<struct pyobj **> *) copy->value;
-        vals = (struct pyobj **) malloc(sizeof(struct pyobj *) * valList.size());
-        for(int i = 0; i < valList.size(); i++){
-            vals[i] = *valList[i];
-        }
-        retval = pyobjList(vals, valList.size());
-        free(vals);
-        break;
-        case PY_NONE:
-        retval = pyobjNone();
-    }
-    
-    pyobjDecRef(left);
-    pyobjDecRef(right);
-    return retval;
 }
 
 struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
@@ -1811,7 +1739,7 @@ struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
             break;
             case PY_BOOL:
             rightBool = *(bool*)right->value;
-            retval = pyobjBool(leftInt * rightBool);
+            retval = pyobjInt(leftInt * rightBool);
             break;
             case PY_LIST:
             data = *(vector<struct pyobj **> *) right->value;
@@ -1844,6 +1772,7 @@ struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
             default:
             throw "Invalid type in probMult";
         }
+        break;
         case PY_BOOL:
         leftBool = *(bool*)left->value;
         switch(right->type){
@@ -1857,7 +1786,7 @@ struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
             break;
             case PY_BOOL:
             rightBool = *(bool*)right->value;
-            retval = pyobjBool(leftBool * rightBool);
+            retval = pyobjInt(leftBool * rightBool);
             break;
             case PY_LIST:
             data = *(vector<struct pyobj **> *) right->value;
@@ -1871,6 +1800,7 @@ struct pyobj *pyobjMult(struct pyobj *left, struct pyobj *right){
             default:
             throw "Invalid type in probMult";
         }
+        break;
         case PY_LIST:
         leftList = *(vector<struct pyobj **>*)left->value;
         switch(right->type){
@@ -1925,7 +1855,7 @@ struct pyobj *pyobjAdd(struct pyobj *left, struct pyobj *right){
             retval = pyobjInt(leftInt + rightInt);
             break;
             case PY_FLOAT:
-            rightFloat = *(double *) left->value;
+            rightFloat = *(double *) right->value;
             retval = pyobjFloat(leftInt + rightFloat);
             break;
             case PY_BOOL:
@@ -1933,6 +1863,7 @@ struct pyobj *pyobjAdd(struct pyobj *left, struct pyobj *right){
             retval = pyobjInt(leftInt + rightBool);
             break;
         }
+        break;
         case PY_FLOAT:
         leftFloat = *(double *) left->value;
         switch(right->type){
@@ -1941,7 +1872,7 @@ struct pyobj *pyobjAdd(struct pyobj *left, struct pyobj *right){
             retval = pyobjFloat(leftFloat + rightInt);
             break;
             case PY_FLOAT:
-            rightFloat = *(double *) left->value;
+            rightFloat = *(double *) right->value;
             retval = pyobjFloat(leftFloat + rightFloat);
             break;
             case PY_BOOL:
@@ -1958,7 +1889,7 @@ struct pyobj *pyobjAdd(struct pyobj *left, struct pyobj *right){
             retval = pyobjInt(leftBool + rightInt);
             break;
             case PY_FLOAT:
-            rightFloat = *(double *) left->value;
+            rightFloat = *(double *) right->value;
             retval = pyobjFloat(leftBool + rightFloat);
             break;
             case PY_BOOL:
@@ -2011,7 +1942,7 @@ struct pyobj *pyobjSub(struct pyobj *left, struct pyobj *right){
             retval = pyobjInt(leftInt - rightInt);
             break;
             case PY_FLOAT:
-            rightFloat = *(double *) left->value;
+            rightFloat = *(double *) right->value;
             retval = pyobjFloat(leftInt - rightFloat);
             break;
             case PY_BOOL:
@@ -2021,6 +1952,7 @@ struct pyobj *pyobjSub(struct pyobj *left, struct pyobj *right){
             default:
             throw "Can't subtract specified type";
         }
+        break;
         case PY_FLOAT:
         leftFloat = *(double *) left->value;
         switch(right->type){
@@ -2029,7 +1961,7 @@ struct pyobj *pyobjSub(struct pyobj *left, struct pyobj *right){
             retval = pyobjFloat(leftFloat - rightInt);
             break;
             case PY_FLOAT:
-            rightFloat = *(double *) left->value;
+            rightFloat = *(double *) right->value;
             retval = pyobjFloat(leftFloat - rightFloat);
             break;
             case PY_BOOL:
