@@ -132,6 +132,7 @@ string pyobjToString(struct pyobj *value){
 }
 
 string pyobjToString(struct pyobj *value, set <struct pyobj *> seen){
+    seen.insert(value);
 	string retval;
 	stringstream ss;
     vector<struct pyobj **> vecData;
@@ -143,8 +144,8 @@ string pyobjToString(struct pyobj *value, set <struct pyobj *> seen){
     //From Dr. Huang's code
     char outstr[128];
     char *p;
-    char printed_0;
-    char printed_0_neg;
+    char printed_0 = 0;
+    char printed_0_neg = 0;
 
 	switch (value->type){
 	case PY_INT:
@@ -197,9 +198,7 @@ string pyobjToString(struct pyobj *value, set <struct pyobj *> seen){
             if (seen.count(*vecData[i]) > 0){
                 retval += "[...]";
             } else {
-                set<struct pyobj *> derp = set<struct pyobj *>(seen);
-                derp.insert(value);
-                retval += pyobjToString(*vecData[i], derp);
+                retval += pyobjToString(*vecData[i], seen);
             }
 			if (vecData.size() - 1 != i){
 				retval += ", ";
@@ -216,9 +215,7 @@ string pyobjToString(struct pyobj *value, set <struct pyobj *> seen){
             if (seen.count(*itr->second) > 0){
                 entry = pyobjToString(itr->first) + ": {...}";
             } else {
-                set<struct pyobj *> derp = set<struct pyobj *>(seen);
-                derp.insert(value);
-                entry = pyobjToString(itr->first) + ": " + pyobjToString(*itr->second, derp);
+                entry = pyobjToString(itr->first) + ": " + pyobjToString(*itr->second, seen);
             }
 			entries.push_back(entry);
 		}
@@ -496,12 +493,17 @@ struct pyobj **pyobjSubscriptStore(struct pyobj *ls, struct pyobj *idx){
     struct pyobj **retval;
     if (ls->type == PY_LIST){
         if (idx->type == PY_INT){
-            int i = *(int *)idx->value;
+            int i = (*(int *)idx->value) % ((vector<struct pyobj **> *)ls->value)->size();
             retval = (*(vector<struct pyobj **> *)ls->value)[i];
         } else {
             throw runtime_error("Cannot index a list with anything other than an int.");
         }
     } else if(ls->type == PY_DICT){
+        if (((map<struct pyobj *, struct pyobj **, cmpPyObj> *)ls->value)->count(idx) < 1){
+            struct pyobj **newObj = (struct pyobj **) malloc(sizeof(struct obj *));
+            *newObj = NULL;
+            (*(map<struct pyobj *, struct pyobj **, cmpPyObj> *)ls->value)[idx] = newObj;
+        }
         retval = (*(map<struct pyobj *, struct pyobj **, cmpPyObj> *)ls->value)[idx];
     } else {
         throw runtime_error("Tried to index something other than a collection.");
@@ -922,7 +924,7 @@ struct pyobj *pyobjEq(struct pyobj *left, struct pyobj *right){
 }
 
 struct pyobj *pyobjEq(struct pyobj *left, struct pyobj *right, set<pair<struct pyobj *, struct pyobj *> > seen){
-
+    seen.insert(pair<struct pyobj *, struct pyobj*>(left, right));
     struct pyobj *retval;
     int leftInt;
     double leftFloat;
@@ -1017,9 +1019,7 @@ struct pyobj *pyobjEq(struct pyobj *left, struct pyobj *right, set<pair<struct p
 
                 pyobjIncRef(leftDatum);
                 pyobjIncRef(rightDatum);
-                set<pair<struct pyobj *, struct pyobj *> > newSeen = set<pair<struct pyobj *, struct pyobj *> >(seen);
-                newSeen.insert(pair<struct pyobj *, struct pyobj*>(leftDatum, rightDatum));
-                retval = pyobjAnd(pyobjEq(leftDatum, rightDatum, newSeen), retval); // Some error here
+                retval = pyobjAnd(pyobjEq(leftDatum, rightDatum, seen), retval); // Some error here
                 if (! *(bool *)retval->value){
                     break;
                 }
@@ -1057,9 +1057,7 @@ struct pyobj *pyobjEq(struct pyobj *left, struct pyobj *right, set<pair<struct p
                 }
                 pyobjIncRef(*leftVal);
                 pyobjIncRef(*rightVal);
-                set<pair<struct pyobj *, struct pyobj *> > newSeen = set<pair<struct pyobj *, struct pyobj *> >(seen);
-                newSeen.insert(pair<struct pyobj *, struct pyobj*>(*leftVal, *rightVal));
-                retval = pyobjAnd(pyobjEq(*leftVal, *rightVal, newSeen), retval);
+                retval = pyobjAnd(pyobjEq(*leftVal, *rightVal, seen), retval);
                 if (! *(bool *)retval->value){
                     break;
                 }
