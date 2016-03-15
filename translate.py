@@ -15,7 +15,7 @@ def toVarName(name):
 def genVarDec(variables):
 	retval = ""
 	for i in variables:
-		retval += "struct pyobj * " + toVarName(i) + ";\n"
+		retval += "struct pyobj * " + toVarName(i) + " = NULL;\n"
 	return retval
 
 class Var:
@@ -29,11 +29,16 @@ def generate_c(n, dec_vars):
 				genList = []
 				for i in n.body:
 						genList.append(generate_c(i, dec_vars))
+						#genList.append("if (a_ != NULL) cout << __LINE__ << \": \" << pyobjGetRef(a_) << endl;")
+						#genList.append("if (b_ != NULL) cout << __LINE__ << \": \" << pyobjGetRef(b_) << endl;\n")
 				variableDeclaration = genVarDec(dec_vars)
 				return "\n".join(["#include <stdio.h>",
 								"#include \"pyobj.h\"",
+								"#include <iostream>",
+								"using namespace std;",
 													"int main()",
 													"{", 
+													"#include <iostream>",
 													variableDeclaration,
 													"pyobjInit();",
 													"True_ = pyobjTrue();",
@@ -50,7 +55,10 @@ def generate_c(n, dec_vars):
 			values = []
 			for i in n.values:
 				values.append(generate_c(i, dec_vars))
-			retval += str(len(values)) + ", "
+			retval += str(len(values))
+			if len(n.values) > 0:
+				retval += ", "
+
 			values = ", ".join(values)
 			retval += values
 			retval += ');\n'
@@ -75,7 +83,7 @@ def generate_c(n, dec_vars):
 			dest = generate_c(n.target, dec_vars)
 			n.target.ctx = Load()
 			source = generate_c(n.target, dec_vars)
-			retval = "pyobjAssign(" + dest + ", " + op + "(" + source + ", " + generate_c(n.value, dec_vars) + "));\n"
+			retval = "pyobjDecRef(pyobjAssign(" + dest + ", " + op + "(" + source + ", " + generate_c(n.value, dec_vars) + ")));\n"
 			return retval
 
 		#Flow control
@@ -204,7 +212,7 @@ def generate_c(n, dec_vars):
 			if len(cmpops) == 1:
 				return cmpops[0]
 			for i in cmpops[:-1]:
-				retval =+ "pyobjAnd(" + i + ", "
+				retval += "pyobjAnd(" + i + ", "
 				stk += [')']
 			retval += cmpops[-1] + "".join(stk)
 			return retval
