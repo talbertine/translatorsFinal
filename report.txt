@@ -67,12 +67,9 @@
 
 	Thomas wrote a grammar for the features that we support.
 	All three of us did pair programming while we wrote the Python code.
-	Hailey and Thomas wrote the first C code and test file.
-	We pair programmed during the last of the C code, and some of the debugging.
-	Thomas did the last of the debugging on his own.
-
-	Thomas worked roughly 42 hours.
-
+	Hailey and Thomas wrote the first C code.
+	Hailey wrote the first test file.
+	All three of us pair programmed during the last of the C code, and the debugging.
 
 	
 3. If your team have discussed with another team, list that team’s members.
@@ -84,3 +81,4 @@
 	A more clear definition of what features we need for the final. Sometimes, Python output can vary based on implementation, so we could have correct output but it might not match the output the TAs are expecting. I know Dr. Huang mentioned that the tests would not be reliant on implementation details, but since we this is the final and we can't come back to discuss these things, it would be nice to see which ones the TAs and Dr. Huang know about so we're all on the same page.
 	Comments in the sample code would be helpful as well.
 	Explicit instructions regarding which compiler to expect. In the parts that we were able to pull form the sample code, sometimes compiling with g++ matches Python output, while clang++ provided output matched the meaning of the python output, but did not match character for character. Initializing some of the variables to zero resolved this problem however.
+	Finally, there were a lot of subtle details about different parts of the project that all have to mesh together, so the project doesn't really lend itself to being a group project. It might be good to ease off the scope and make it a solo project next time.
